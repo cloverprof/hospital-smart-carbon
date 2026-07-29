@@ -2,6 +2,8 @@ import { useState } from "react";
 import * as Icons from "lucide-react";
 import { alarms, buildings, insights, kpis, navItems, systemRows, trend } from "./data/hospital";
 import { CarbonWorkbench } from "./CarbonWorkbench";
+import { ModulePage } from "./ModulePage";
+import { modulePages } from "./data/module-pages";
 
 type IconName = keyof typeof Icons;
 
@@ -100,7 +102,7 @@ export default function App() {
         </header>
         <main>
           <div className="content-head"><div><p>HOSPITAL ENERGY & CARBON COMMAND</p><h1>{current.label}</h1></div><div className="content-status"><span><i className="ok"/>系统运行正常</span><small>数据更新 14:32:18</small></div></div>
-          {active === "leader" ? <LeaderDashboard /> : active === "carbon" ? <CarbonWorkbench /> : <Placeholder active={active} />}
+          {active === "leader" ? <LeaderDashboard /> : active === "carbon" ? <CarbonWorkbench /> : modulePages[active] ? <ModulePage key={active} config={modulePages[active]} /> : <Placeholder active={active} />}
         </main>
       </div>
     </div>
