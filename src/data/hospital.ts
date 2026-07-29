@@ -38,11 +38,13 @@ export const trend = [
 ];
 
 export const buildings = [
-  { name: "门诊医技楼", value: 2840, rate: 78, status: "关注", x: 51, y: 24, color: "#f59e0b" },
-  { name: "住院一部", value: 2360, rate: 64, status: "正常", x: 26, y: 42, color: "#20d7c5" },
-  { name: "住院二部", value: 2210, rate: 58, status: "正常", x: 68, y: 40, color: "#20d7c5" },
-  { name: "手术中心", value: 1960, rate: 86, status: "预警", x: 56, y: 52, color: "#ff6b52" },
-  { name: "科研教学楼", value: 1420, rate: 45, status: "正常", x: 35, y: 22, color: "#20d7c5" },
+  { name: "门诊医技楼", value: 2840, rate: 78, status: "关注", x: 48, y: 55, color: "#f2b640" },
+  { name: "住院一部", value: 2360, rate: 64, status: "正常", x: 34, y: 16, color: "#20d7c5" },
+  { name: "住院二部", value: 2210, rate: 58, status: "正常", x: 53, y: 20, color: "#20d7c5" },
+  { name: "手术中心", value: 1960, rate: 86, status: "预警", x: 75, y: 52, color: "#ff6b52" },
+  { name: "科研教学楼", value: 1420, rate: 45, status: "正常", x: 23, y: 34, color: "#20d7c5" },
+  { name: "急诊中心", value: 1685, rate: 71, status: "关注", x: 62, y: 57, color: "#f2b640" },
+  { name: "后勤动力中心", value: 986, rate: 42, status: "正常", x: 83, y: 39, color: "#20d7c5" },
 ];
 
 export const systemRows = [

@@ -38,8 +38,8 @@ function TrendChart() {
 function HospitalMap() {
   return (
     <div className="hospital-map">
-      <div className="map-grid" />
-      <div className="campus-road r1" /><div className="campus-road r2" />
+      <img className="campus-model" src="/dashboard/hospital-night-campus.webp" alt="医院院区夜景数字孪生模型" />
+      <div className="campus-model-shade" />
       {buildings.map((b, i) => (
         <button className="building" style={{ left: `${b.x}%`, top: `${b.y}%`, borderColor: b.color, "--accent": b.color } as React.CSSProperties} key={b.name}>
           <span className={`block b${i + 1}`} />

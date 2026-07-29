@@ -46,16 +46,15 @@ main { padding: 18px 20px 28px; }
 .panel-head::before { content: ""; position: absolute; left: 0; top: 13px; width: 3px; height: 19px; background: #3bd9e7; box-shadow: 0 0 10px #3bd9e7; }
 .panel-head h2 { margin: 0; font-size: 14px; letter-spacing: .5px; }.panel-head span { color: #668491; font-size: 10px; }
 .map-panel { grid-column: 1 / 3; }.resource-panel { grid-column: 3; }.system-panel { grid-column: 1; }.trend-panel { grid-column: 2; }.alarm-panel { display: none; }.ai-panel { grid-column: 3; }
-.hospital-map { height: calc(100% - 45px); background: radial-gradient(ellipse at 50% 50%, #173e4f, #091721 70%); position: relative; overflow: hidden; }
-.map-grid { position: absolute; inset: 0; background-image: linear-gradient(#4bcbd707 1px,transparent 1px),linear-gradient(90deg,#4bcbd707 1px,transparent 1px); background-size: 28px 28px; transform: perspective(400px) rotateX(48deg) scale(1.6); transform-origin: center 70%; }
-.campus-road { position: absolute; height: 22px; width: 88%; left: 6%; top: 57%; background: #101f29; border-block: 1px solid #285061; transform: rotate(-7deg); }
-.campus-road.r2 { transform: rotate(72deg); width: 55%; left: 25%; top: 45%; }
+.hospital-map { height: calc(100% - 45px); background:#07131d; position: relative; overflow: hidden; }
+.campus-model{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 51%;filter:saturate(.82) contrast(1.06) brightness(.88)}
+.campus-model-shade{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 48%,transparent 22%,#03101a22 62%,#02091088 100%),linear-gradient(180deg,#06182822,#03101a55);pointer-events:none}
 .building { position: absolute; border: 0; background: transparent; cursor: pointer; z-index: 2; }
-.building .block { width: 72px; height: 48px; display: block; transform: skewY(-8deg); border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 25%, #0d2430); box-shadow: inset 0 0 18px #071019, 0 0 16px color-mix(in srgb, var(--accent) 30%, transparent); }
-.building .block::before { content:""; position:absolute; inset: 7px; background: repeating-linear-gradient(90deg,#b8ffff44 0 3px,transparent 3px 11px); }
-.building .pin { position: absolute; left: 25px; top: -31px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #90fff3; border: 1px solid #4de2d2; background: #0b3440; box-shadow: 0 0 12px #36dacb; }
+.building .block { width: 64px; height: 36px; display: block; transform: translate(-32px,-3px) skewY(-5deg); clip-path:polygon(8% 18%,84% 0,100% 25%,94% 82%,18% 100%,0 72%); border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 20%, transparent); box-shadow: inset 0 0 14px color-mix(in srgb, var(--accent) 18%, transparent),0 0 9px color-mix(in srgb,var(--accent) 42%,transparent); }
+.building:hover .block,.building:focus .block{background:color-mix(in srgb,var(--accent) 32%,transparent);filter:brightness(1.25)}
+.building .pin { position: absolute; left: -14px; top: -34px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #90fff3; border: 1px solid #4de2d2; background: #0b3440; box-shadow: 0 0 12px #36dacb; }
 .building .pin::after { content:""; height: 10px; width: 1px; background: #4de2d2; position:absolute; top:27px; }
-.building-tip { display: none; position:absolute; bottom: 58px; left: 45px; width: 132px; text-align:left; padding: 8px 9px; background:#07151fee; border:1px solid var(--accent); z-index:4; }
+.building-tip { display: none; position:absolute; bottom: 48px; left: 10px; width: 132px; text-align:left; padding: 8px 9px; background:#07151fee; border:1px solid var(--accent); z-index:4; }
 .building:hover .building-tip, .building:focus .building-tip { display: grid; }.building-tip strong { font-size:11px; }.building-tip em { font: 600 13px "IBM Plex Mono"; color:var(--accent); font-style:normal; margin-top:3px; }.building-tip small { color:#73909d; }
 .map-caption { position: absolute; left: 14px; bottom: 12px; display: flex; flex-direction: column; border-left: 2px solid #38dbdc; padding-left: 9px; }.map-caption span { font-size: 13px; }.map-caption small { color:#5d8996; margin-top:3px; }
 .donut-row { display: flex; padding: 22px 18px 14px; gap: 20px; align-items: center; }
