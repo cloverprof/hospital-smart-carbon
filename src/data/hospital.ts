@@ -38,14 +38,77 @@ export const trend = [
 ];
 
 export const buildings = [
-  { name: "门诊医技楼", value: 2840, rate: 78, status: "关注", x: 48, y: 55, color: "#f2b640" },
-  { name: "住院一部", value: 2360, rate: 64, status: "正常", x: 34, y: 16, color: "#20d7c5" },
-  { name: "住院二部", value: 2210, rate: 58, status: "正常", x: 53, y: 20, color: "#20d7c5" },
-  { name: "手术中心", value: 1960, rate: 86, status: "预警", x: 75, y: 52, color: "#ff6b52" },
-  { name: "科研教学楼", value: 1420, rate: 45, status: "正常", x: 23, y: 34, color: "#20d7c5" },
-  { name: "急诊中心", value: 1685, rate: 71, status: "关注", x: 62, y: 57, color: "#f2b640" },
-  { name: "后勤动力中心", value: 986, rate: 42, status: "正常", x: 83, y: 39, color: "#20d7c5" },
-];
+  {
+    name: "住院一部", value: 2360, rate: 64, status: "正常", color: "#20d7c5",
+    surfaces: [
+      { kind: "roof", d: "M612 36 L742 30 L786 48 L747 68 L650 70 Z" },
+      { kind: "front", d: "M650 70 L747 68 L747 313 L652 301 Z" },
+      { kind: "side", d: "M747 68 L786 48 L787 273 L747 313 Z" },
+    ],
+    marker: [700, 45],
+  },
+  {
+    name: "住院二部", value: 2210, rate: 58, status: "正常", color: "#20d7c5",
+    surfaces: [
+      { kind: "roof", d: "M1051 151 L1150 139 L1234 171 L1193 194 L1090 184 Z" },
+      { kind: "front", d: "M1090 184 L1193 194 L1193 333 L1092 316 Z" },
+      { kind: "side", d: "M1193 194 L1234 171 L1233 298 L1193 333 Z" },
+    ],
+    marker: [1145, 155],
+  },
+  {
+    name: "科研教学楼", value: 1420, rate: 45, status: "正常", color: "#20d7c5",
+    surfaces: [
+      { kind: "roof", d: "M439 178 L513 166 L571 199 L527 220 L463 211 Z" },
+      { kind: "front", d: "M463 211 L527 220 L563 374 L494 354 Z" },
+      { kind: "side", d: "M527 220 L571 199 L589 325 L563 374 Z" },
+    ],
+    marker: [515, 177],
+  },
+  {
+    name: "后勤动力中心", value: 986, rate: 42, status: "正常", color: "#20d7c5",
+    surfaces: [
+      { kind: "roof", d: "M870 252 L933 235 L1004 258 L972 279 L903 277 Z" },
+      { kind: "front", d: "M903 277 L972 279 L973 365 L904 347 Z" },
+      { kind: "side", d: "M972 279 L1004 258 L1010 329 L973 365 Z" },
+    ],
+    marker: [940, 243],
+  },
+  {
+    name: "门诊医技楼", value: 2840, rate: 78, status: "关注", color: "#f2b640",
+    surfaces: [
+      { kind: "roof", d: "M507 355 L620 338 L681 354 L665 376 L557 390 Z" },
+      { kind: "front", d: "M557 390 L665 376 L694 535 L584 551 L535 505 Z" },
+      { kind: "roof", d: "M664 374 L785 350 L844 377 L816 399 L699 410 Z" },
+      { kind: "front", d: "M699 410 L816 399 L835 558 L722 572 L694 535 Z" },
+      { kind: "roof", d: "M817 399 L932 379 L1007 407 L975 432 L862 440 Z" },
+      { kind: "front", d: "M862 440 L975 432 L1000 575 L895 593 L835 558 Z" },
+      { kind: "roof", d: "M975 431 L1082 414 L1156 446 L1123 470 L1010 477 Z" },
+      { kind: "front", d: "M1010 477 L1123 470 L1143 612 L1040 635 L1000 575 Z" },
+    ],
+    marker: [845, 370],
+  },
+  {
+    name: "急诊中心", value: 1685, rate: 71, status: "关注", color: "#f2b640",
+    surfaces: [
+      { kind: "roof", d: "M748 493 L827 474 L900 493 L875 520 L793 532 L728 515 Z" },
+      { kind: "front", d: "M793 532 L875 520 L904 590 L823 617 L752 583 L728 515 Z" },
+    ],
+    marker: [826, 463],
+  },
+  {
+    name: "手术中心", value: 1960, rate: 86, status: "预警", color: "#ff6b52",
+    surfaces: [
+      { kind: "roof", d: "M1239 284 L1379 271 L1490 326 L1435 354 L1292 344 Z" },
+      { kind: "front", d: "M1292 344 L1435 354 L1435 498 L1392 518 L1280 486 Z" },
+      { kind: "side", d: "M1435 354 L1490 326 L1486 465 L1435 498 Z" },
+      { kind: "roof", d: "M1281 486 L1392 518 L1427 548 L1364 575 L1262 545 Z" },
+      { kind: "front", d: "M1262 545 L1364 575 L1364 682 L1282 645 L1254 563 Z" },
+      { kind: "side", d: "M1364 575 L1427 548 L1427 647 L1364 682 Z" },
+    ],
+    marker: [1382, 283],
+  },
+] as const;
 
 export const systemRows = [
   { name: "中央冷站", metric: "COP", value: "4.72", state: "高效", load: 82 },
