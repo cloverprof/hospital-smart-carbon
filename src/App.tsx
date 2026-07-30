@@ -36,17 +36,46 @@ function TrendChart() {
 }
 
 function HospitalMap() {
+  const [selected, setSelected] = useState<string | null>(null);
   return (
     <div className="hospital-map">
       <img className="campus-model" src="/dashboard/hospital-night-campus.webp" alt="医院院区夜景数字孪生模型" />
       <div className="campus-model-shade" />
-      {buildings.map((b, i) => (
-        <button className="building" style={{ left: `${b.x}%`, top: `${b.y}%`, borderColor: b.color, "--accent": b.color } as React.CSSProperties} key={b.name}>
-          <span className={`block b${i + 1}`} />
-          <span className="pin"><Icons.Hospital size={13} /></span>
-          <span className="building-tip"><strong>{b.name}</strong><em>{b.value} MWh</em><small>{b.status}</small></span>
-        </button>
-      ))}
+      <svg className="building-overlay" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMid slice" aria-label="医院楼宇能耗分级图">
+        {buildings.map((b) => {
+          const active = selected === b.name;
+          const [mx, my] = b.marker;
+          return (
+            <g
+              className={`building-shape ${active ? "is-selected" : ""}`}
+              style={{ "--accent": b.color } as React.CSSProperties}
+              key={b.name}
+              role="button"
+              tabIndex={0}
+              aria-label={`${b.name}，${b.value} MWh，${b.status}`}
+              onClick={() => setSelected(active ? null : b.name)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelected(active ? null : b.name)}
+            >
+              <g className="building-surfaces">
+                {b.surfaces.map((surface, index) => (
+                  <path className={`building-surface ${surface.kind}`} d={surface.d} key={`${surface.kind}-${index}`} />
+                ))}
+              </g>
+              <g className="map-pin" transform={`translate(${mx} ${my})`}>
+                <line y1="20" y2="47" />
+                <circle r="25" />
+                <path d="M-9 8V-8h7v-7h4v7h7V8M-4 8V2h8v6M-4-3h2M3-3h2" />
+              </g>
+              <g className="svg-building-tip" transform={`translate(${mx + 34} ${my - 40})`}>
+                <rect width="190" height="88" />
+                <text className="tip-name" x="15" y="25">{b.name}</text>
+                <text className="tip-value" x="15" y="52">{b.value} MWh</text>
+                <text className="tip-status" x="15" y="74">{b.status}</text>
+              </g>
+            </g>
+          );
+        })}
+      </svg>
       <div className="map-caption"><span>主院区能源态势</span><small>楼宇能耗分级 · 实时</small></div>
     </div>
   );
