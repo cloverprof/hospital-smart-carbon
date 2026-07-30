@@ -6,3 +6,6 @@ vite.config.d.ts
 .DS_Store
 *.log
 .tmp-model/
+
+# Preview files
+.preview
