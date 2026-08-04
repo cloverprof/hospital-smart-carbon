@@ -36,7 +36,7 @@ export const modulePages: Record<string, ModulePageConfig> = {
     tabs:["能源总览","楼宇分项","表计台账"],
     kpis:[{label:"今日用电",value:"86,420",unit:"kWh",change:"-4.2%",note:"峰值 4.82 MW"},{label:"今日用水",value:"1,286",unit:"m³",change:"+1.8%",note:"非诊疗时段占比 21%"},{label:"今日天然气",value:"8,460",unit:"m³",change:"-2.6%",note:"锅炉效率 92.4%"},{label:"绿电与光伏",value:"12,680",unit:"kWh",change:"+8.4%",note:"清洁能源占比 14.7%"}],
     primaryTitle:"分时能源趋势",series:[{label:"0时",value:28,color:"#34d6e8"},{label:"4时",value:23,color:"#34d6e8"},{label:"8时",value:55,color:"#34d6e8"},{label:"12时",value:78,color:"#34d6e8"},{label:"16时",value:87,color:"#34d6e8"},{label:"20时",value:63,color:"#34d6e8"},{label:"24时",value:32,color:"#34d6e8"}],
-    rankingTitle:"楼宇能耗排名",ranking:[{name:"门诊医技楼",value:"28,450 kWh",percent:91,state:"偏高"},{name:"住院一部",value:"21,680 kWh",percent:76,state:"正常"},{name:"手术中心",value:"18,920 kWh",percent:68,state:"关注"},{name:"科研教学楼",value:"12,360 kWh",percent:48,state:"正常"}],
+    rankingTitle:"楼宇能耗排名",ranking:[{name:"门诊医技楼",value:"28,450 kWh",percent:91,state:"偏高"},{name:"住院一部",value:"21,680 kWh",percent:76,state:"正常"},{name:"手术中心",value:"18,920 kWh",percent:68,state:"关注"},{name:"行政综合楼",value:"12,360 kWh",percent:48,state:"正常"}],
     tableTitle:"表计异常",columns:["测点","位置","当前值","异常类型","状态"],rows:[["EM-MT-031","医技楼冷站","486.2 kW","偏离基线","待复核"],["WM-IP-205","住院二部 5F","18.6 m³/h","用水突增","处理中"],["GM-PW-012","动力站 2# 锅炉","692 m³/h","效率下降","已派单"],["EM-OR-008","手术中心","126.8 kW","夜间基荷","待确认"]],
     actionTitle:"数据接入状态",actions:[{title:"电力表计",meta:"684 / 692 在线",status:"98.8%"},{title:"水务表计",meta:"218 / 224 在线",status:"97.3%"},{title:"气热表计",meta:"76 / 78 在线",status:"97.4%"}],
   },

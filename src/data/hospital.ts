@@ -7,7 +7,7 @@ export const navItems: NavItem[] = [
   { id: "department", label: "科室能效", icon: "Hospital" },
   { id: "systems", label: "重点系统", icon: "Cpu" },
   { id: "equipment", label: "医疗设备", icon: "ScanLine" },
-  { id: "carbon", label: "碳核算", icon: "Leaf" },
+  { id: "carbon", label: "碳管理", icon: "Leaf" },
   { id: "alarms", label: "告警中心", icon: "BellRing" },
   { id: "ai", label: "AI 节能诊断", icon: "Sparkles" },
   { id: "projects", label: "节能项目", icon: "ClipboardCheck" },
@@ -57,7 +57,7 @@ export const buildings = [
     marker: [1145, 155],
   },
   {
-    name: "科研教学楼", value: 1420, rate: 45, status: "正常", color: "#20d7c5",
+    name: "行政综合楼", value: 1420, rate: 45, status: "正常", color: "#20d7c5",
     surfaces: [
       { kind: "roof", d: "M439 178 L513 166 L571 199 L527 220 L463 211 Z" },
       { kind: "front", d: "M463 211 L527 220 L563 374 L494 354 Z" },
