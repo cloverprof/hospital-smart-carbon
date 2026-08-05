@@ -1,0 +1,233 @@
+{
+  "durationMinutes": 30,
+  "fpsAvg": 60,
+  "fpsMin": 55,
+  "fps1PercentLow": 60,
+  "fpsSampleCount": 1784,
+  "heapStartMB": 9,
+  "heapEndMB": 15,
+  "heapMaxMB": 15,
+  "nodesStart": 273,
+  "nodesEnd": 301,
+  "contextLost": 0,
+  "errors": [],
+  "samples": [
+    {
+      "minute": 0,
+      "heapMB": 9,
+      "nodes": 273,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 1,
+      "heapMB": 11,
+      "nodes": 285,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 2,
+      "heapMB": 10,
+      "nodes": 297,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 3,
+      "heapMB": 13,
+      "nodes": 279,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 4,
+      "heapMB": 12,
+      "nodes": 291,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 5,
+      "heapMB": 12,
+      "nodes": 273,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 6,
+      "heapMB": 12,
+      "nodes": 313,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 7,
+      "heapMB": 12,
+      "nodes": 325,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 8,
+      "heapMB": 13,
+      "nodes": 307,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 9,
+      "heapMB": 12,
+      "nodes": 319,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 10,
+      "heapMB": 13,
+      "nodes": 301,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 11,
+      "heapMB": 13,
+      "nodes": 293,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 12,
+      "heapMB": 13,
+      "nodes": 305,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 13,
+      "heapMB": 14,
+      "nodes": 287,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 14,
+      "heapMB": 13,
+      "nodes": 299,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 15,
+      "heapMB": 14,
+      "nodes": 281,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 16,
+      "heapMB": 13,
+      "nodes": 318,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 17,
+      "heapMB": 13,
+      "nodes": 330,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 18,
+      "heapMB": 14,
+      "nodes": 312,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 19,
+      "heapMB": 14,
+      "nodes": 324,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 20,
+      "heapMB": 13,
+      "nodes": 306,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 21,
+      "heapMB": 14,
+      "nodes": 285,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 22,
+      "heapMB": 14,
+      "nodes": 297,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 23,
+      "heapMB": 13,
+      "nodes": 279,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 24,
+      "heapMB": 14,
+      "nodes": 291,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 25,
+      "heapMB": 14,
+      "nodes": 273,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 26,
+      "heapMB": 13,
+      "nodes": 313,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 27,
+      "heapMB": 14,
+      "nodes": 325,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 28,
+      "heapMB": 14,
+      "nodes": 307,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 29,
+      "heapMB": 13,
+      "nodes": 319,
+      "listeners": 17,
+      "contextLost": 0
+    },
+    {
+      "minute": 30,
+      "heapMB": 15,
+      "nodes": 301,
+      "listeners": 17,
+      "contextLost": 0
+    }
+  ]
+}

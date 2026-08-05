@@ -11,3 +11,12 @@ vite.config.d.ts
 .preview
 .cozeproj/reduction
 .codegraph
+
+# Local dependency and editor state
+.pnpm-store/
+.vscode/
+
+# Local source/reference bundles and generated delivery copies
+hospital-smart-carbon-claude-delivery-*/
+hospital-smart-carbon-claude-delivery-*.zip
+项目提示文件/

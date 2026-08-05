@@ -1,0 +1,121 @@
+import type { EmissionFactorRecord } from "../types/core";
+
+// 排放因子表：verified=true 表示 2026-08-04 已在线核验（来源与访问记录见 docs/compliance-sources.md）；
+// verified=false 的项在界面必须标注“待标准确认（演示）”。
+export const emissionFactors: EmissionFactorRecord[] = [
+  {
+    id: "ef-elec-2023",
+    name: "全国电力平均二氧化碳排放因子（2023 年，不含市场化交易的非化石能源电量）",
+    scope: 2,
+    value: 0.6096,
+    unit: "kgCO2/kWh",
+    version: "生态环境部 国家统计局 2023 年电力二氧化碳排放因子公告",
+    applicableYear: "2026 核算年演示默认（最新已发布年份）",
+    source: "生态环境部公告（2025-12-31 发布）",
+    sourceUrl: "https://www.mee.gov.cn/xxgk2018/xxgk/xxgk01/202512/t20251231_1139517.html",
+    verified: true,
+    note: "未采购绿电/绿证的单位适用本口径；平台默认因子",
+  },
+  {
+    id: "ef-elec-2022-full",
+    name: "全国电力平均二氧化碳排放因子（2022 年，全口径）",
+    scope: 2,
+    value: 0.5366,
+    unit: "kgCO2/kWh",
+    version: "公告 2024 年第 33 号",
+    applicableYear: "2024 核算年（历史追溯）",
+    source: "生态环境部 国家统计局（2024-12-20 发布）",
+    sourceUrl: "https://www.mee.gov.cn/xxgk2018/xxgk/xxgk01/202412/t20241226_1099413.html",
+    verified: true,
+    note: "同公告另有不含市场化交易非化石口径 0.5856、化石能源电力 0.8325",
+  },
+  {
+    id: "ef-natgas",
+    name: "天然气燃烧排放因子",
+    scope: 1,
+    value: 2.162,
+    unit: "kgCO2/m³",
+    version: "按低位发热量 38.931 MJ/m³ 与缺省碳含量推算（演示）",
+    applicableYear: "通用（演示）",
+    source: "省级温室气体清单编制指南缺省值口径",
+    sourceUrl: "",
+    verified: false,
+    note: "待标准确认（演示）：正式核算按 JS/T 303-2026 附录缺省值或实测低位发热量",
+  },
+  {
+    id: "ef-heat",
+    name: "外购热力排放因子",
+    scope: 2,
+    value: 0.11,
+    unit: "tCO2/GJ",
+    version: "行业常用缺省值（演示）",
+    applicableYear: "通用（演示）",
+    source: "常用参考值",
+    sourceUrl: "",
+    verified: false,
+    note: "待标准确认（演示）：应采用供热企业实测因子或 JS/T 303-2026 缺省值",
+  },
+  {
+    id: "ef-n2o-ar6",
+    name: "氧化亚氮（N2O，麻醉/笑气）GWP-100",
+    scope: 1,
+    value: 273,
+    unit: "kgCO2e/kg",
+    version: "IPCC AR6",
+    applicableYear: "AR6（2021）",
+    source: "IPCC 第六次评估报告；医学文献综述同值",
+    sourceUrl: "https://www.thelancet.com/journals/lanplh/article/PIIS2542-5196(23)00084-0/fulltext",
+    verified: true,
+    note: "AR4 为 298、AR5 为 265；平台默认 AR6=273，可配置",
+  },
+  {
+    id: "ef-desflurane",
+    name: "地氟烷（Desflurane）GWP-100",
+    scope: "ext",
+    value: 2540,
+    unit: "kgCO2e/kg",
+    version: "文献值（GWP-100 约 2540；GWP-20 约 3714，评估版本不一）",
+    applicableYear: "演示",
+    source: "The Lancet Planetary Health 2023 等文献",
+    sourceUrl: "https://www.thelancet.com/journals/lanplh/article/PIIS2542-5196(23)00084-0/fulltext",
+    verified: false,
+    note: "麻醉气体为前瞻性预留边界，不计入当前合规总量；正式采用需选定评估口径",
+  },
+  {
+    id: "ef-water-ext",
+    name: "自来水生产间接排放因子（扩展边界）",
+    scope: "ext",
+    value: 0.168,
+    unit: "kgCO2e/m³",
+    version: "研究文献参考值（演示）",
+    applicableYear: "演示",
+    source: "文献参考（非合规口径）",
+    sourceUrl: "",
+    verified: false,
+    note: "仅用于扩展边界演示；JS/T 303-2026 合规口径不含用水间接排放",
+  },
+  {
+    id: "ef-oxygen-ext",
+    name: "医用氧气生产碳足迹（扩展边界）",
+    scope: "ext",
+    value: 0.41,
+    unit: "kgCO2e/m³",
+    version: "深冷空分典型电耗折算（演示）",
+    applicableYear: "演示",
+    source: "按 0.6-0.7 kWh/m³ 空分电耗 × 电网因子估算",
+    sourceUrl: "",
+    verified: false,
+    note: "前瞻性预留/不计入当前合规总量",
+  },
+];
+
+export const factorById = Object.fromEntries(emissionFactors.map((f) => [f.id, f]));
+
+/** 当前演示核算使用的因子（kgCO2e / 品种单位），口径：JS/T 303-2026（化石燃料直接 + 外购电力热力间接） */
+export const activeFactors = {
+  electricity: 0.6096,
+  gas: 2.162,
+  heat: 110, // kgCO2/GJ
+  water: 0, // 合规口径不计入
+  medgas: 0, // 合规口径不计入（扩展边界单独演示）
+} as const;
