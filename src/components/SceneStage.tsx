@@ -15,7 +15,7 @@ import { EChart } from "./EChart";
 import { Tag } from "./kit";
 
 const NIGHT_IMAGE = `${import.meta.env.BASE_URL}dashboard/hospital-night-campus.webp`;
-const COCKPIT_STANDARD_IMAGE = `${import.meta.env.BASE_URL}dashboard/cockpit-campus-16x9.webp`;
+const COCKPIT_STANDARD_IMAGE = `${import.meta.env.BASE_URL}dashboard/cockpit-campus-16x9.png`;
 const COCKPIT_WIDE_IMAGE = `${import.meta.env.BASE_URL}dashboard/cockpit-campus-ultrawide.webp`;
 
 export type SceneVariant = "leader" | "operations" | "spatial";
