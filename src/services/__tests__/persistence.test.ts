@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_NS, nsKey } from "../../data/config";
+import { normalizePersistedDemoState, useDemoStore } from "../../stores/demo";
 
 // 重置演示只清本命名空间的行为（clearNamespace 的纯逻辑）
 function clearNamespaceIn(store: Map<string, string>): void {
@@ -36,18 +37,23 @@ describe("localStorage 命名空间", () => {
 });
 
 describe("schema 版本迁移", () => {
-  // migrate 策略：版本不符直接丢弃回种子数据，不得抛错导致白屏
-  const SCHEMA_VERSION = 1;
-  const migrate = (persisted: unknown, version: number) => (version !== SCHEMA_VERSION ? undefined : persisted);
-
-  it("旧版本数据被丢弃而不是抛错", () => {
-    expect(migrate({ role: "leader" }, 0)).toBeUndefined();
-    expect(() => migrate({ role: "leader" }, 0)).not.toThrow();
+  it("旧缓存中的东院区被迁移为主院区，且其它状态保留", () => {
+    expect(normalizePersistedDemoState({ role: "leader", campus: "east" })).toMatchObject({
+      role: "leader",
+      campus: "main",
+      schemaVersion: 2,
+    });
   });
 
-  it("同版本数据原样保留", () => {
-    const data = { role: "logistics" };
-    expect(migrate(data, 1)).toBe(data);
+  it("损坏或空持久化数据也安全回落到主院区", () => {
+    expect(normalizePersistedDemoState(null)).toEqual({ campus: "main", schemaVersion: 2 });
+    expect(normalizePersistedDemoState(["east"])).toEqual({ campus: "main", schemaVersion: 2 });
+  });
+
+  it("运行时 setCampus 不再允许切到东院区", () => {
+    useDemoStore.setState({ campus: "main" });
+    useDemoStore.getState().setCampus("east");
+    expect(useDemoStore.getState().campus).toBe("main");
   });
 });
 

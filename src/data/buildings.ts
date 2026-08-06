@@ -84,3 +84,34 @@ export const buildingById = Object.fromEntries(buildings.map((b) => [b.id, b])) 
 export const mainBuildings = buildings.filter((b) => b.campusId === "main");
 export const buildingName = (id: BuildingId) => buildingById[id]?.name ?? id;
 export const campusName = (id: CampusId) => campuses.find((c) => c.id === id)?.name ?? id;
+
+/**
+ * 驾驶舱背景图的热点锚点（百分比坐标）。
+ * 领导/后勤驾驶舱使用新底图；空间视图仍使用 buildings.anchor 的旧夜景映射。
+ */
+export const cockpitSceneAnchors: Record<"standard" | "wide", Record<BuildingId, { x: number; y: number }>> = {
+  standard: {
+    outpatient: { x: 48, y: 68 },
+    inpatientA: { x: 40, y: 24 },
+    inpatientB: { x: 54, y: 26 },
+    surgical: { x: 56, y: 48 },
+    lab: { x: 32, y: 45 },
+    imaging: { x: 66, y: 57 },
+    cssd: { x: 72, y: 48 },
+    admin: { x: 67, y: 30 },
+    power: { x: 26, y: 54 },
+    emergency: { x: 79, y: 67 },
+  },
+  wide: {
+    outpatient: { x: 46, y: 69 },
+    inpatientA: { x: 39, y: 31 },
+    inpatientB: { x: 50, y: 33 },
+    surgical: { x: 52, y: 52 },
+    lab: { x: 32, y: 48 },
+    imaging: { x: 59, y: 60 },
+    cssd: { x: 67, y: 53 },
+    admin: { x: 59, y: 36 },
+    power: { x: 25, y: 59 },
+    emergency: { x: 65, y: 71 },
+  },
+};

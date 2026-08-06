@@ -9,14 +9,15 @@ import { workOrderSeeds } from "../data/workorders";
 import { assertTransition, alarmTransitions, workOrderTransitions } from "../services/machines";
 import type { Alarm, AlarmStatus, CampusId, Project, ProjectStage, RoleId, SceneMode, WorkOrder, WorkOrderStatus } from "../types/core";
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 interface DemoStore {
   schemaVersion: number;
   role: RoleId;
   allPermissions: boolean;
   sceneMode: SceneMode;
-  campus: CampusId;
+  /** 当前演示仅开放主院区；保留字段用于旧缓存兼容。 */
+  campus: "main";
   /** 各页面筛选条件（pageId -> 任意可序列化对象） */
   pageFilters: Record<string, Record<string, string | number | boolean>>;
   recentModuleIds: string[];
@@ -28,12 +29,14 @@ interface DemoStore {
   setRole: (role: RoleId) => void;
   setAllPermissions: (on: boolean) => void;
   setSceneMode: (mode: SceneMode) => void;
+  /** @deprecated 全局院区切换已移除，任何输入都会归一化为主院区。 */
   setCampus: (campus: CampusId) => void;
   setPageFilter: (pageId: string, patch: Record<string, string | number | boolean>) => void;
   touchModule: (moduleId: string) => void;
 
   transitionAlarm: (id: string, to: AlarmStatus) => void;
   transitionWorkOrder: (id: string, to: WorkOrderStatus, note?: string, actor?: string) => void;
+  createWorkOrder: (workOrder: WorkOrder) => boolean;
   addWorkOrderLog: (id: string, action: string, note: string, actor?: string) => void;
   addProject: (project: Project) => void;
   setProjectStage: (id: string, stage: ProjectStage) => void;
@@ -67,7 +70,7 @@ export const useDemoStore = create<DemoStore>()(
       setRole: (role) => set({ role }),
       setAllPermissions: (allPermissions) => set({ allPermissions }),
       setSceneMode: (sceneMode) => set({ sceneMode }),
-      setCampus: (campus) => set({ campus }),
+      setCampus: () => set({ campus: "main" }),
       setPageFilter: (pageId, patch) =>
         set((s) => ({ pageFilters: { ...s.pageFilters, [pageId]: { ...s.pageFilters[pageId], ...patch } } })),
       touchModule: (moduleId) =>
@@ -101,6 +104,19 @@ export const useDemoStore = create<DemoStore>()(
               : w,
           ),
         }));
+      },
+
+      createWorkOrder: (workOrder) => {
+        if (get().workOrders.some((item) => item.id === workOrder.id)) {
+          get().pushToast("工单未创建", `编号 ${workOrder.id} 已存在`, "warning");
+          return false;
+        }
+        if (workOrder.status !== "received") {
+          get().pushToast("工单未创建", "新建工单必须从“接收”状态开始", "warning");
+          return false;
+        }
+        set((state) => ({ workOrders: [workOrder, ...state.workOrders] }));
+        return true;
       },
 
       addWorkOrderLog: (id, action, note, actor = "当前用户") =>
@@ -141,7 +157,7 @@ export const useDemoStore = create<DemoStore>()(
         role: s.role,
         allPermissions: s.allPermissions,
         sceneMode: s.sceneMode,
-        campus: s.campus,
+        campus: "main",
         pageFilters: s.pageFilters,
         recentModuleIds: s.recentModuleIds,
         alarms: s.alarms,
@@ -149,13 +165,30 @@ export const useDemoStore = create<DemoStore>()(
         projects: s.projects,
       }),
       migrate: (persisted, version) => {
-        // 旧 schema：直接丢弃，回到种子数据（最小迁移策略，见 docs/DECISIONS.md）
+        // v1 曾允许持久化 east；升级后保留其它演示状态，但强制回到主院区。
+        if (version === 1) return normalizePersistedDemoState(persisted) as never;
+        // 未知旧 schema 仍按原策略丢弃，避免不兼容数据导致白屏。
         if (version !== SCHEMA_VERSION) return undefined as never;
-        return persisted as never;
+        return normalizePersistedDemoState(persisted) as never;
       },
+      // 即使同版本缓存被手工写成 east，也不允许恢复为非主院区运行态。
+      merge: (persisted, current) => ({
+        ...current,
+        ...normalizePersistedDemoState(persisted),
+        schemaVersion: SCHEMA_VERSION,
+        campus: "main",
+      }),
     },
   ),
 );
+
+/** 将任何历史持久化状态归一化为当前只开放的主院区。 */
+export function normalizePersistedDemoState(persisted: unknown): Record<string, unknown> {
+  const state = persisted && typeof persisted === "object" && !Array.isArray(persisted)
+    ? persisted as Record<string, unknown>
+    : {};
+  return { ...state, schemaVersion: SCHEMA_VERSION, campus: "main" };
+}
 
 /** localStorage 不可用（隐私模式/被禁用/容量满）时回退到内存，保证不白屏 */
 function safeStorage(): Storage {

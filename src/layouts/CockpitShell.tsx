@@ -9,7 +9,7 @@ export function CockpitShell({ name, variant, children }: { name: string; varian
     <div className="cockpit">
       <TopBar cockpitName={name} withScene />
       <div className="cockpit-stage">
-        <SceneStage variant={variant} />
+        <SceneStage variant={variant} backdrop="cockpit" />
         {children}
       </div>
       <ToastHost />

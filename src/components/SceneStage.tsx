@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { openAnomaliesByBuilding } from "../data/anomalies";
-import { mainBuildings } from "../data/buildings";
+import { cockpitSceneAnchors, mainBuildings } from "../data/buildings";
 import { demoAsOfDate } from "../data/config";
 import { workOrderStatusMeta } from "../data/workorders";
 import { useDemoStore } from "../stores/demo";
@@ -15,8 +15,18 @@ import { EChart } from "./EChart";
 import { Tag } from "./kit";
 
 const NIGHT_IMAGE = `${import.meta.env.BASE_URL}dashboard/hospital-night-campus.webp`;
+const COCKPIT_STANDARD_IMAGE = `${import.meta.env.BASE_URL}dashboard/cockpit-campus-16x9.webp`;
+const COCKPIT_WIDE_IMAGE = `${import.meta.env.BASE_URL}dashboard/cockpit-campus-ultrawide.webp`;
 
 export type SceneVariant = "leader" | "operations" | "spatial";
+export type SceneBackdrop = "legacy" | "cockpit";
+
+type PlateStyle = React.CSSProperties & {
+  "--plate-x-standard"?: string;
+  "--plate-y-standard"?: string;
+  "--plate-x-wide"?: string;
+  "--plate-y-wide"?: string;
+};
 
 function plateStatus(buildingId: BuildingId): "ok" | "warn" | "danger" {
   const open = openAnomaliesByBuilding(buildingId);
@@ -25,39 +35,75 @@ function plateStatus(buildingId: BuildingId): "ok" | "warn" | "danger" {
   return "ok";
 }
 
-export function SceneStage({ variant }: { variant: SceneVariant }) {
+export function SceneStage({ variant, backdrop = "legacy" }: { variant: SceneVariant; backdrop?: SceneBackdrop }) {
   const [selected, setSelected] = useState<BuildingId | null>(null);
   const selectedBuilding = selected ? mainBuildings.find((b) => b.id === selected) ?? null : null;
+  const isCockpit = backdrop === "cockpit";
 
   return (
     <>
-      <div className="scene-layer" style={{ backgroundImage: `url(${NIGHT_IMAGE})` }} aria-label="医院园区夜景（静态模式）" />
-      <div className="plate-layer">
-        {mainBuildings.map((b) => {
-          const st = plateStatus(b.id);
-          const todayT = Math.round(dailyCarbonKg(b.id, demoAsOfDate) / 100) / 10;
-          return (
-            <button
-              key={b.id}
-              className={`plate status-${st === "ok" ? "ok" : st} ${selected === b.id ? "selected" : ""}`}
-              style={{ left: `${b.anchor.x}%`, top: `${b.anchor.y}%`, background: "none", border: "none", padding: 0 }}
-              onClick={() => setSelected(selected === b.id ? null : b.id)}
-              aria-label={`${b.name} 详情`}
-            >
-              <span className="plate-card">
-                <i className="dot" />
-                {b.shortName}
-                <small className="num">{todayT}t</small>
-              </span>
-              <span className="plate-pin" />
-            </button>
-          );
-        })}
-      </div>
+      {isCockpit ? (
+        <>
+          <div className="scene-layer scene-layer--cockpit" role="img" aria-label="医院园区夜景（驾驶舱静态模式）">
+            <div className="scene-artboard scene-artboard--cockpit scene-artboard--media">
+              <picture className="scene-picture">
+                <source media="(min-aspect-ratio: 21/10)" srcSet={COCKPIT_WIDE_IMAGE} type="image/webp" />
+                <img src={COCKPIT_STANDARD_IMAGE} alt="" decoding="async" fetchPriority="high" draggable={false} />
+              </picture>
+            </div>
+          </div>
+          <div className="scene-artboard scene-artboard--cockpit scene-artboard--hotspots" aria-label="楼宇交互热点">
+            <PlateLayer backdrop="cockpit" selected={selected} onSelect={setSelected} />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="scene-layer" style={{ backgroundImage: `url(${NIGHT_IMAGE})` }} role="img" aria-label="医院园区夜景（静态模式）" />
+          <PlateLayer backdrop="legacy" selected={selected} onSelect={setSelected} />
+        </>
+      )}
       {selectedBuilding && (
-        <BuildingPopup building={selectedBuilding} variant={variant} onClose={() => setSelected(null)} />
+        <BuildingPopup building={selectedBuilding} variant={variant} centered={isCockpit} onClose={() => setSelected(null)} />
       )}
     </>
+  );
+}
+
+function PlateLayer({ backdrop, selected, onSelect }: { backdrop: SceneBackdrop; selected: BuildingId | null; onSelect: (id: BuildingId | null) => void }) {
+  return (
+    <div className={`plate-layer ${backdrop === "cockpit" ? "plate-layer--adaptive" : ""}`}>
+      {mainBuildings.map((b) => {
+        const st = plateStatus(b.id);
+        const todayT = Math.round(dailyCarbonKg(b.id, demoAsOfDate) / 100) / 10;
+        const anchor = cockpitSceneAnchors.standard[b.id];
+        const wideAnchor = cockpitSceneAnchors.wide[b.id];
+        const style: PlateStyle = backdrop === "cockpit"
+          ? {
+              "--plate-x-standard": `${anchor.x}%`,
+              "--plate-y-standard": `${anchor.y}%`,
+              "--plate-x-wide": `${wideAnchor.x}%`,
+              "--plate-y-wide": `${wideAnchor.y}%`,
+              background: "none", border: "none", padding: 0,
+            }
+          : { left: `${b.anchor.x}%`, top: `${b.anchor.y}%`, background: "none", border: "none", padding: 0 };
+        return (
+          <button
+            key={b.id}
+            className={`plate status-${st === "ok" ? "ok" : st} ${selected === b.id ? "selected" : ""}`}
+            style={style}
+            onClick={() => onSelect(selected === b.id ? null : b.id)}
+            aria-label={`${b.name} 详情`}
+          >
+            <span className="plate-card">
+              <i className="dot" />
+              {b.shortName}
+              <small className="num">{todayT}t</small>
+            </span>
+            <span className="plate-pin" />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -67,9 +113,9 @@ function popPosition(b: Building): React.CSSProperties {
   return { left, top };
 }
 
-function BuildingPopup({ building, variant, onClose }: { building: Building; variant: SceneVariant; onClose: () => void }) {
+function BuildingPopup({ building, variant, centered, onClose }: { building: Building; variant: SceneVariant; centered: boolean; onClose: () => void }) {
   return (
-    <div className="building-pop fadeup" style={popPosition(building)}>
+    <div className={`building-pop fadeup ${centered ? "building-pop--cockpit" : ""}`} style={centered ? undefined : popPosition(building)}>
       <header>
         <div>
           <h4>{building.name}</h4>

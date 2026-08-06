@@ -23,6 +23,7 @@ export const STORAGE_NS = "hospital-carbon-demo:v1";
 export const nsKey = (key: string) => `${STORAGE_NS}:${key}`;
 
 export const PRODUCT_NAME = "医碳智擎";
+export const PRODUCT_ENGLISH_NAME = "HOSPITAL ENERGY & CARBON OS";
 export const PRODUCT_FULL_NAME = "医碳智擎｜医院智慧能碳管理平台";
 export const HOSPITAL_NAME = "某三级综合医院（Demo）";
 

@@ -1,14 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { mainBuildings } from "../../data/buildings";
-import { demoAsOfDate } from "../../data/config";
+import { dailyHistoryStart, demoAsOfDate } from "../../data/config";
+import { activeFactors } from "../../data/factors";
 import {
   dailyCarbonKg,
   dailySeries,
   dailyUsage,
   forecastDailyCarbon,
+  forecastHospitalHourlyElectricCarbonKg,
+  forecastHospitalHourlySeries,
   hospitalDailyCarbonT,
+  hospitalHourlyElectricCarbonKg,
+  hospitalHourlySeries,
   hourlySeries,
+  hourlyHistoryStart,
   monthlySeries,
+  realtimeElectricCarbonKgPerHour,
+  realtimePowerKw,
 } from "../timeseries";
 
 describe("确定性", () => {
@@ -42,6 +50,17 @@ describe("层级一致性：上级总量 = 下级汇总", () => {
     expect(Math.abs(sum - day) / day).toBeLessThan(0.005);
   });
 
+  it("全院 24 小时用量 = 各楼宇小时汇总，且约等于当日全院用量", () => {
+    const date = demoAsOfDate;
+    const hospital = hospitalHourlySeries("electricity", date);
+    const buildingSum = Array.from({ length: 24 }, (_, hour) =>
+      mainBuildings.reduce((sum, building) => sum + hourlySeries(building.id, "electricity", date)[hour].v, 0));
+    expect(hospital).toHaveLength(24);
+    expect(hospital.every((point, hour) => Math.abs(point.v - buildingSum[hour]) < 0.01)).toBe(true);
+    const day = dailySeries("electricity", date, date)[0].v;
+    expect(Math.abs(hospital.reduce((sum, point) => sum + point.v, 0) - day) / day).toBeLessThan(0.005);
+  });
+
   it("全院日碳排(t) ≈ 各楼宇日碳排(kg)之和 ÷ 1000", () => {
     const date = "2026-08-02";
     const t = hospitalDailyCarbonT(date);
@@ -70,5 +89,45 @@ describe("预测", () => {
     expect(fc[0].v).toBeGreaterThan(recentAvg * 0.75);
     expect(fc[0].v).toBeLessThan(recentAvg * 1.25);
     expect(fc.every((p) => Number.isFinite(p.v) && p.v > 0)).toBe(true);
+  });
+
+  it("小时预测来自历史同星期数据，长度完整、为正且不复制目标日实际曲线", () => {
+    const actual = hospitalHourlySeries("electricity", demoAsOfDate);
+    const forecast = forecastHospitalHourlySeries("electricity", demoAsOfDate);
+    expect(hourlyHistoryStart >= dailyHistoryStart).toBe(true);
+    expect(forecast).toHaveLength(24);
+    expect(forecast.every((point) => Number.isFinite(point.v) && point.v > 0)).toBe(true);
+    expect(forecast.some((point, hour) => Math.abs(point.v - actual[hour].v) > 0.1)).toBe(true);
+  });
+
+  it("小时电力碳排的历史与预测均使用 activeFactors.electricity", () => {
+    const historicalPower = hospitalHourlySeries("electricity", demoAsOfDate);
+    const historicalCarbon = hospitalHourlyElectricCarbonKg(demoAsOfDate);
+    const forecastPower = forecastHospitalHourlySeries("electricity", demoAsOfDate);
+    const forecastCarbon = forecastHospitalHourlyElectricCarbonKg(demoAsOfDate);
+
+    expect(historicalCarbon).toHaveLength(24);
+    expect(forecastCarbon).toHaveLength(24);
+    historicalCarbon.forEach((point, hour) => {
+      expect(point.v).toBeCloseTo(historicalPower[hour].v * activeFactors.electricity, 1);
+    });
+    forecastCarbon.forEach((point, hour) => {
+      expect(point.v).toBeCloseTo(forecastPower[hour].v * activeFactors.electricity, 1);
+    });
+  });
+});
+
+describe("实时碳排", () => {
+  it("5 秒拍号会确定性改变实时功率与实时电力碳排", () => {
+    const tick = 14.5 * 3600;
+    const firstPower = realtimePowerKw(tick);
+    const nextPower = realtimePowerKw(tick + 5);
+    const firstCarbon = realtimeElectricCarbonKgPerHour(tick);
+    const nextCarbon = realtimeElectricCarbonKgPerHour(tick + 5);
+
+    expect(firstPower).not.toBe(nextPower);
+    expect(firstCarbon).not.toBe(nextCarbon);
+    expect(firstCarbon).toBeCloseTo(firstPower * activeFactors.electricity, 1);
+    expect(nextCarbon).toBeCloseTo(nextPower * activeFactors.electricity, 1);
   });
 });

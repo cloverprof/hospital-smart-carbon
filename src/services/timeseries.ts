@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import { anomalyChains } from "../data/anomalies";
 import { buildingById, mainBuildings } from "../data/buildings";
 import { activeFactors } from "../data/factors";
-import { demoAsOfDate, dailyHistoryStart, energyKindMeta, forecastEnd, historyStart } from "../data/config";
+import { demoAsOfDate, dailyHistoryStart, energyKindMeta, forecastEnd, historyStart, hourlyHistoryDays } from "../data/config";
 import { hashSeed, mulberry32 } from "../data/rng";
 import type { BuildingId, EnergyKind, SeriesPoint } from "../types/core";
 
@@ -146,6 +146,72 @@ export function hourlySeries(buildingId: BuildingId, kind: EnergyKind, date: str
   }));
 }
 
+/** 全院某品种 24 小时序列（品种单位/时），由楼宇小时数据汇总。 */
+export function hospitalHourlySeries(kind: EnergyKind, date: string): SeriesPoint[] {
+  return cached(`hhs:${kind}:${date}`, () =>
+    Array.from({ length: 24 }, (_, hour) => ({
+      t: `${String(hour).padStart(2, "0")}:00`,
+      v: Math.round(mainBuildings.reduce((sum, building) => sum + hourlySeries(building.id, kind, date)[hour].v, 0) * 10) / 10,
+    })),
+  );
+}
+
+/**
+ * 全院外购电力小时碳排速率（kgCO2e/h）。
+ * 实时、历史和预测图均调用此口径：外购电力活动数据 × 已核验的 activeFactors.electricity。
+ */
+export function hospitalHourlyElectricCarbonKg(date: string): SeriesPoint[] {
+  return cached(`hhec:${date}`, () =>
+    hospitalHourlySeries("electricity", date).map((point) => ({
+      t: point.t,
+      v: Math.round(point.v * activeFactors.electricity * 10) / 10,
+    })),
+  );
+}
+
+/** 当前演示可调用的小时历史起点（含基准日在内 90 天）。 */
+export const hourlyHistoryStart = dayjs(demoAsOfDate).subtract(hourlyHistoryDays - 1, "day").format("YYYY-MM-DD");
+
+const FORECAST_WEEK_LOOKBACKS = [7, 14, 21, 28] as const;
+const FORECAST_WEEK_WEIGHTS = [0.4, 0.3, 0.2, 0.1] as const;
+
+/**
+ * 全院小时活动数据预测：前四个同星期日的历史曲线加权，再依目标日天气和业务量修正。
+ * 不读取目标日 actual 序列；异常、业务量和天气造成的差异因此可用于真实/预测偏差展示。
+ */
+export function forecastHospitalHourlySeries(kind: EnergyKind, date: string): SeriesPoint[] {
+  return cached(`fhhs:${kind}:${date}`, () => {
+    const historyDates = FORECAST_WEEK_LOOKBACKS.map((days) => dayjs(date).subtract(days, "day").format("YYYY-MM-DD"));
+
+    return Array.from({ length: 24 }, (_, hour) => {
+      const v = mainBuildings.reduce((hospitalTotal, building) => {
+        const historicalValue = historyDates.reduce(
+          (sum, historyDate, index) => sum + hourlySeries(building.id, kind, historyDate)[hour].v * FORECAST_WEEK_WEIGHTS[index],
+          0,
+        );
+        const historicalDriver = historyDates.reduce(
+          (sum, historyDate, index) => sum + seasonFactor(kind, historyDate) * businessFactor(building.id, kind, historyDate) * FORECAST_WEEK_WEIGHTS[index],
+          0,
+        );
+        const targetDriver = seasonFactor(kind, date) * businessFactor(building.id, kind, date);
+        const driverRatio = historicalDriver > 0 ? targetDriver / historicalDriver : 1;
+        return hospitalTotal + historicalValue * driverRatio;
+      }, 0);
+      return { t: `${String(hour).padStart(2, "0")}:00`, v: Math.round(v * 10) / 10 };
+    });
+  });
+}
+
+/** 预测的全院外购电力小时碳排速率（kgCO2e/h），与历史/实时序列共用同一排放因子。 */
+export function forecastHospitalHourlyElectricCarbonKg(date: string): SeriesPoint[] {
+  return cached(`fhhec:${date}`, () =>
+    forecastHospitalHourlySeries("electricity", date).map((point) => ({
+      t: point.t,
+      v: Math.round(point.v * activeFactors.electricity * 10) / 10,
+    })),
+  );
+}
+
 /** 日序列（含可选楼宇过滤；不填 = 全院合计，保证总量=分项和） */
 export function dailySeries(kind: EnergyKind, from: string, to: string, buildingId?: BuildingId): SeriesPoint[] {
   return cached(`ds:${kind}:${from}:${to}:${buildingId ?? "all"}`, () => dailySeriesRaw(kind, from, to, buildingId));
@@ -266,6 +332,11 @@ export function realtimePowerKw(nowTick: number, buildingId?: BuildingId): numbe
   }
   const jitter = 1 + (mulberry32(hashSeed(`rt:${Math.floor(nowTick / 5)}`))() - 0.5) * 0.03;
   return Math.round(kw * jitter);
+}
+
+/** “实时”外购电力碳排速率（kgCO2e/h），和 realtimePowerKw 同步按 5 秒拍号变化。 */
+export function realtimeElectricCarbonKgPerHour(nowTick: number, buildingId?: BuildingId): number {
+  return Math.round(realtimePowerKw(nowTick, buildingId) * activeFactors.electricity * 10) / 10;
 }
 
 /** 单位指标：折标煤 tce */

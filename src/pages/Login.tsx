@@ -2,7 +2,8 @@
 // 不接真实认证、不保存输入、无验证码。
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PRODUCT_FULL_NAME, PRODUCT_NAME, demoAsOfDate } from "../data/config";
+import { BrandLockup } from "../components/BrandLockup";
+import { PRODUCT_FULL_NAME, demoAsOfDate } from "../data/config";
 import { useDemoStore } from "../stores/demo";
 
 const NIGHT_IMAGE = `${import.meta.env.BASE_URL}dashboard/hospital-night-campus.webp`;
@@ -43,16 +44,17 @@ export function LoginPage() {
     <div className="login-page">
       <div className="login-bg" style={{ backgroundImage: `url(${NIGHT_IMAGE})` }} />
       <div className="login-card fadeup">
-        <div className="brand">
-          <h1>{PRODUCT_NAME}</h1>
-          <p>医院智慧能碳管理平台</p>
-        </div>
+        <BrandLockup
+          className="login-brand"
+          title="医院智慧能碳管理平台"
+          variant="login"
+        />
         <form onSubmit={submit}>
           <label htmlFor="login-account">账号</label>
           <input
             id="login-account"
             className="login-input"
-            placeholder="请输入账号（演示环境不校验）"
+            placeholder="请输入账号"
             value={account}
             onChange={(e) => setAccount(e.target.value)}
             autoComplete="off"
@@ -62,7 +64,7 @@ export function LoginPage() {
             id="login-password"
             className="login-input"
             type="password"
-            placeholder="请输入密码（不保存、不上传）"
+            placeholder="请输入密码"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="off"

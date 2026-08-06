@@ -21,6 +21,7 @@ const SpatialPage = lazy(() => import("./pages/Spatial").then((m) => ({ default:
 const WorkOrdersPage = lazy(() => import("./pages/operations/WorkOrders").then((m) => ({ default: m.WorkOrdersPage })));
 const InspectionPage = lazy(() => import("./pages/operations/Inspection").then((m) => ({ default: m.InspectionPage })));
 const ProjectLibraryPage = lazy(() => import("./pages/operations/ProjectLibrary").then((m) => ({ default: m.ProjectLibraryPage })));
+const DepartmentWorkbenchPage = lazy(() => import("./pages/department/Workbench").then((m) => ({ default: m.DepartmentWorkbenchPage })));
 
 function Lazy({ children }: { children: ReactNode }) {
   return <Suspense fallback={<div className="route-loading" style={{ padding: 24, color: "var(--ink-3)", fontSize: 12 }}>正在加载模块…</div>}>{children}</Suspense>;
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="operations/workorders" element={<Lazy><WorkOrdersPage /></Lazy>} />
         <Route path="operations/inspection" element={<Lazy><InspectionPage /></Lazy>} />
         <Route path="operations/projects" element={<Lazy><ProjectLibraryPage /></Lazy>} />
+        <Route path="department/workbench" element={<Lazy><DepartmentWorkbenchPage /></Lazy>} />
       </Route>
       {/* 旧路由兼容跳转 */}
       <Route path="/dashboard" element={<Navigate to="/cockpit/leader" replace />} />

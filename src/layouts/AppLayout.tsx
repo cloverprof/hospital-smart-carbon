@@ -2,6 +2,7 @@ import * as Icons from "lucide-react";
 import { useState, type ComponentType } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { ToastHost } from "../components/ui";
+import { BrandLockup } from "../components/BrandLockup";
 import { navItems } from "../data/hospital";
 import { modulePages } from "../data/module-pages";
 import { usePlatformStore } from "../stores/platform";
@@ -71,7 +72,7 @@ export function AppLayout() {
 
     <div className="original-main-shell">
       <header className="original-topbar">
-        <div className="brand"><span>医碳智擎</span><i>HOSPITAL ENERGY &amp; CARBON OS</i></div>
+        <BrandLockup className="legacy-brand-lockup" title="医院智慧能碳管理平台" />
         <div className="page-title"><b>{current.title}</b><span>{current.navId === "leader" ? "院级运营总览" : current.subtitle}</span></div>
         <div className="top-actions">
           <label className="top-select"><Icons.MapPin size={15} /><select aria-label="医院选择" value={filters.hospital} onChange={(event) => setFilter("hospital", event.target.value as GlobalFilters["hospital"])}><option>总院</option><option>东院区</option><option>西院区</option></select></label>

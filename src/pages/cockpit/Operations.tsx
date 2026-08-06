@@ -1,7 +1,9 @@
 // 后勤驾驶舱（提示词 6.6.2）：能耗-碳排-设备一体化运营。
 // 执行层视角：实时负荷、系统效率、运行事件、今日任务、高碳排行。
-import { Activity, ClipboardCheck, Radio } from "lucide-react";
+import dayjs from "dayjs";
+import { Activity, ChevronRight, ClipboardCheck, Clock3, Radio } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { EChart } from "../../components/EChart";
 import { Panel, Tag } from "../../components/kit";
 import { alarmLevelMeta, alarmStatusMeta } from "../../data/alarms";
@@ -11,11 +13,15 @@ import { deviceStats } from "../../data/devices";
 import { activeFactors } from "../../data/factors";
 import { CockpitShell } from "../../layouts/CockpitShell";
 import { useDemoStore } from "../../stores/demo";
+import type { WorkOrder } from "../../types/core";
 import {
   dailyCarbonKg,
+  forecastHospitalHourlyElectricCarbonKg,
   hospitalDailyCarbonT,
+  hospitalHourlyElectricCarbonKg,
   hourlySeries,
   outpatientVisits,
+  realtimeElectricCarbonKgPerHour,
   realtimePowerKw,
 } from "../../services/timeseries";
 
@@ -46,6 +52,14 @@ const TODAY_TASKS = [
   { name: "锅炉余热回收核查", status: "done", pct: 100, owner: "锅炉班" },
 ] as const;
 
+function dueState(workOrder: WorkOrder): "overdue" | "soon" | "normal" | "done" {
+  if (workOrder.status === "closed") return "done";
+  const hours = dayjs(workOrder.dueAt).diff(dayjs(`${demoAsOfDate} 00:00`), "hour");
+  if (hours < 0) return "overdue";
+  if (hours <= 48) return "soon";
+  return "normal";
+}
+
 export function OperationsCockpit() {
   const { alarms, workOrders } = useDemoStore();
   const [tick, setTick] = useState(0);
@@ -62,7 +76,8 @@ export function OperationsCockpit() {
     return () => window.clearInterval(t);
   }, []);
 
-  const kw = realtimePowerKw(14.5 * 3600 + tick * 5);
+  const realtimeTick = 14.5 * 3600 + tick * 5;
+  const kw = realtimePowerKw(realtimeTick);
   const todayCarbon = hospitalDailyCarbonT(demoAsOfDate);
   const stats = deviceStats();
   // 在线率口径 = 表计/采集通讯在线率（故障设备仍在线上报，不计离线）
@@ -82,6 +97,37 @@ export function OperationsCockpit() {
     return { elec, carbonNow, load };
   }, []);
 
+  const liveCarbon = useMemo(() => {
+    const today = dayjs(demoAsOfDate);
+    const currentHour = Math.floor((realtimeTick / 3600) % 24);
+    const startHour = (currentHour + 1) % 24;
+    const hours = Array.from({ length: 24 }, (_, index) => (startHour + index) % 24);
+    const rows = hours.map((hour) => {
+      const date = hour > currentHour ? today.subtract(1, "day") : today;
+      const dateText = date.format("YYYY-MM-DD");
+      const historical = hospitalHourlyElectricCarbonKg(dateText)[hour].v;
+      const previous = hospitalHourlyElectricCarbonKg(date.subtract(1, "day").format("YYYY-MM-DD"))[hour].v;
+      const forecast = forecastHospitalHourlyElectricCarbonKg(dateText)[hour].v;
+      const actual = date.isSame(today, "day") && hour === currentHour
+        ? realtimeElectricCarbonKgPerHour(realtimeTick)
+        : historical;
+      return { hour, actual, previous, forecast };
+    });
+    const current = rows[rows.length - 1];
+    const deviationPct = current.forecast ? ((current.actual - current.forecast) / current.forecast) * 100 : 0;
+    const minute = Math.floor((realtimeTick / 60) % 60);
+
+    return {
+      labels: rows.map((row) => `${String(row.hour).padStart(2, "0")}:00`),
+      actual: rows.map((row) => row.actual),
+      previous: rows.map((row) => row.previous),
+      forecast: rows.map((row) => row.forecast),
+      current: current.actual,
+      deviationPct,
+      clock: `${String(currentHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+    };
+  }, [realtimeTick]);
+
   const ranking = useMemo(
     () =>
       mainBuildings
@@ -89,6 +135,86 @@ export function OperationsCockpit() {
         .sort((a, b) => b.v - a.v),
     [],
   );
+
+  const workOrderFlow = useMemo(() => {
+    const open = workOrders.filter((workOrder) => workOrder.status !== "closed");
+    const stages = [
+      {
+        name: "待研判",
+        count: open.filter((workOrder) => workOrder.status === "received" || workOrder.status === "judging").length,
+        color: "#5f7799",
+      },
+      {
+        name: "待执行",
+        count: open.filter((workOrder) => workOrder.status === "assigned").length,
+        color: "#29d3e8",
+      },
+      {
+        name: "处理中",
+        count: open.filter((workOrder) => workOrder.status === "processing").length,
+        color: "#35d399",
+      },
+      {
+        name: "验证中",
+        count: open.filter((workOrder) => workOrder.status === "retest" || workOrder.status === "review").length,
+        color: "#8b8df0",
+      },
+    ];
+    const high = open.filter((workOrder) => workOrder.priority === "high").length;
+    const dueSoon = open.filter((workOrder) => {
+      const state = dueState(workOrder);
+      return state === "soon" || state === "overdue";
+    }).length;
+    const earliest = [...open]
+      .sort((a, b) => dayjs(a.dueAt).valueOf() - dayjs(b.dueAt).valueOf())
+      .slice(0, 2);
+
+    return {
+      open: open.length,
+      high,
+      dueSoon,
+      earliest,
+      stages,
+      option: {
+        animationDuration: 420,
+        legend: false as const,
+        grid: { left: 0, right: 0, top: 4, bottom: 4 },
+        tooltip: {
+          trigger: "item",
+          formatter: (params: { seriesName: string; value: number }) => `${params.seriesName}：${params.value} 单`,
+        },
+        xAxis: {
+          type: "value",
+          max: Math.max(open.length, 1),
+          show: false,
+        },
+        yAxis: {
+          type: "category",
+          data: ["在途工单"],
+          show: false,
+        },
+        series: stages.map((stage, index) => ({
+          name: stage.name,
+          type: "bar",
+          stack: "work-order-flow",
+          barWidth: 18,
+          data: [stage.count],
+          itemStyle: {
+            color: stage.color,
+            borderRadius: index === 0 ? [4, 0, 0, 4] : index === stages.length - 1 ? [0, 4, 4, 0] : 0,
+          },
+          label: {
+            show: stage.count > 0,
+            position: "inside",
+            color: "#06101f",
+            fontSize: 10,
+            fontWeight: 700,
+            formatter: String(stage.count),
+          },
+        })),
+      },
+    };
+  }, [workOrders]);
 
   const kpis = [
     { label: "实时总负荷", v: (kw / 1000).toFixed(2), u: "MW", sub: "全院电力（5s 模拟刷新）", tone: "cyan" },
@@ -176,7 +302,7 @@ export function OperationsCockpit() {
 
         {/* 中列：仅底部留言，场景为主 */}
         <div className="hud-col center">
-          <div style={{ pointerEvents: "auto", alignSelf: "center", marginBottom: 2 }}>
+          <div style={{ pointerEvents: "auto", alignSelf: "center", marginBottom: "clamp(175px, 21vh, 238px)" }}>
             <p style={{ margin: 0, fontSize: 10, color: "var(--ink-3)", textAlign: "center", background: "rgba(6,13,27,0.55)", padding: "3px 12px", borderRadius: 999 }}>
               点击楼宇名牌查看当前故障、工单与碳影响 · 红色=存在严重异常
             </p>
@@ -292,8 +418,121 @@ export function OperationsCockpit() {
               </div>
             )}
           </Panel>
+
+          <Panel
+            title="工单闭环与时限"
+            extra={
+              <Link className="pf-btn ghost" to="/app/operations/workorders" style={{ padding: "2px 7px", fontSize: 10 }}>
+                查看工单 <ChevronRight size={11} />
+              </Link>
+            }
+          >
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, marginBottom: 6 }}>
+              {[
+                { label: "在途", value: workOrderFlow.open, unit: "单", color: "var(--cyan)" },
+                { label: "高优先级", value: workOrderFlow.high, unit: "单", color: "var(--red)" },
+                { label: "48h 临期", value: workOrderFlow.dueSoon, unit: "单", color: "var(--amber)" },
+              ].map((item, index) => (
+                <div
+                  key={item.label}
+                  style={{
+                    padding: "1px 9px 3px",
+                    borderLeft: index > 0 ? "1px solid var(--panel-border)" : undefined,
+                  }}
+                >
+                  <span style={{ display: "block", color: "var(--ink-3)", fontSize: 9.5 }}>{item.label}</span>
+                  <b className="num" style={{ color: item.color, fontSize: 17, lineHeight: 1.25 }}>
+                    {item.value}<small style={{ marginLeft: 3, fontSize: 9, color: "var(--ink-3)", fontWeight: 400 }}>{item.unit}</small>
+                  </b>
+                </div>
+              ))}
+            </div>
+
+            <EChart height={36} option={workOrderFlow.option} />
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 6, marginTop: 3 }}>
+              {workOrderFlow.stages.map((stage) => (
+                <span key={stage.name} style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--ink-3)", fontSize: 9.5 }}>
+                  <i style={{ width: 6, height: 6, borderRadius: 2, background: stage.color }} />
+                  {stage.name} {stage.count}
+                </span>
+              ))}
+            </div>
+
+            <div style={{ borderTop: "1px solid rgba(56,116,178,0.16)", marginTop: 7, paddingTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
+              {workOrderFlow.earliest.map((workOrder, index) => {
+                const state = dueState(workOrder);
+                return (
+                  <div key={workOrder.id} style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto", alignItems: "center", gap: 6, fontSize: 10 }}>
+                    {index === 0 ? <Clock3 size={11} color={state === "overdue" ? "var(--red)" : "var(--amber)"} /> : <span style={{ width: 11 }} />}
+                    <span title={`${workOrder.id} · ${workOrder.title}`} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--ink-2)" }}>
+                      {workOrder.id} · {workOrder.title}
+                    </span>
+                    <span className="num" style={{ color: state === "overdue" ? "var(--red)" : state === "soon" ? "var(--amber)" : "var(--ink-3)" }}>
+                      {dayjs(workOrder.dueAt).format("MM-DD HH:mm")}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Panel>
         </div>
       </div>
+
+      <Panel
+        className="operations-live-carbon"
+        title="医院实时碳排速率"
+        extra={(
+          <span className="panel-extra">
+            <Radio size={12} className="breath" />LIVE（模拟） · 当前 {liveCarbon.current.toLocaleString("zh-CN", { maximumFractionDigits: 0 })} kgCO₂e/h · {liveCarbon.clock}
+          </span>
+        )}
+      >
+        <EChart
+          height="clamp(118px, 15vh, 164px)"
+          option={{
+            animationDuration: 380,
+            animationDurationUpdate: 380,
+            grid: { left: 54, right: 20, top: 28, bottom: 22 },
+            legend: { data: ["实时", "昨日", "预测"], top: 0 },
+            xAxis: { type: "category", data: liveCarbon.labels, axisLabel: { interval: 2, fontSize: 9 } },
+            yAxis: { type: "value", name: "kgCO₂e/h", nameTextStyle: { fontSize: 9, color: "#5f7799" }, axisLabel: { fontSize: 9 } },
+            tooltip: { valueFormatter: (value: unknown) => `${Number(value).toLocaleString("zh-CN", { maximumFractionDigits: 0 })} kgCO₂e/h` },
+            series: [
+              {
+                name: "实时",
+                type: "line",
+                data: liveCarbon.actual,
+                symbol: "none",
+                smooth: true,
+                z: 3,
+                lineStyle: { width: 2.6, color: "#29d3e8" },
+                areaStyle: { opacity: 0.1, color: "#29d3e8" },
+              },
+              {
+                name: "昨日",
+                type: "bar",
+                data: liveCarbon.previous,
+                barMaxWidth: 20,
+                itemStyle: { color: "rgba(245,165,36,0.38)", borderColor: "rgba(245,165,36,0.78)", borderWidth: 1, borderRadius: [3, 3, 0, 0] },
+              },
+              {
+                name: "预测",
+                type: "line",
+                data: liveCarbon.forecast,
+                symbol: "none",
+                smooth: true,
+                z: 4,
+                lineStyle: { width: 2.2, type: "dashed", color: "#ff7467" },
+              },
+            ],
+          }}
+        />
+        <div className="operations-live-carbon__caption">
+          <span>偏离预测 <b className={liveCarbon.deviationPct > 0 ? "is-over" : "is-under"}>{liveCarbon.deviationPct >= 0 ? "+" : ""}{liveCarbon.deviationPct.toFixed(1)}%</b></span>
+          <span>范围二·外购电力 · 因子 0.6096 kgCO₂e/kWh（已核验）</span>
+          <span>预测为模拟估算；天然气/热力因子待标准确认（演示）</span>
+        </div>
+      </Panel>
 
       <div style={{ position: "absolute", left: 16, bottom: 12, zIndex: 12, fontSize: 10, color: "var(--ink-3)" }}>
         工单闭环率本月 87% · 进行中 {workOrders.filter((w) => w.status !== "closed").length} 单 · 详情见 后勤运维 → 设备台账与工单
